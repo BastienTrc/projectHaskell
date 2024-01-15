@@ -1,0 +1,19 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1 style="text-align: center;">Conversion S-Expressions --> JSON</h1>
+    <form action="/convert" method="post" style="text-align: center;">
+        <label for="s-expression">S-Expression:</label> <br>
+        <input type="text" name="s-expression" id="s-expression" placeholder="Veuillez entrer votre S-Expression" style="margin:1rem 0 1rem 0; width: 50rem; padding: 1rem;"> <br>
+        <input type="submit" value="Convertir en JSON"> <br>
+    </form>
+
+    <p id='succes'></p>
+
+    <p id='error'></p>
+</body>
+</html>
