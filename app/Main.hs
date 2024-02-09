@@ -27,18 +27,19 @@ main = do
       post "/convert" $ do
         inputStr <- body
         let input = decodeUtf8 inputStr
-        if "hello" `T.isInfixOf` input
+        if "hello" `T.isInfixOf` input -- remplacer par la conversion en JSON, et vérifier si la conversion s'est bien passée
         then do
             status status200
-            let content = "<p style='text-align:center; color:green;'>Succes : 'hello' trouvé<p>"
+            let content = "<p style='text-align:center; color:green;'>Succes : 'hello' trouvé<p>" -- remplacer par le contenu JSON
             let toReplace = "<p id='succes'></p>"
             replaceHtml "./app/templates/index.html" toReplace content
         else do
             status status400
-            let errorMsg = "<p style='text-align:center; color:red;'>Erreur : 'hello' non trouvé<p>"
+            let errorMsg = "<p style='text-align:center; color:red;'>Erreur : 'hello' non trouvé<p>" -- remplacer par le message d'erreur
             let toReplace = "<p id='error'></p>"
             replaceHtml "./app/templates/index.html" toReplace errorMsg
       
+-- Fonction pour remplacer le contenu HTML dans un fichier donné par un nouveau contenu
 replaceHtml :: FilePath -> String -> String -> ActionM ()
 replaceHtml filePath toReplace newContent = do
     fileContent <- liftIO $ TIO.readFile filePath
