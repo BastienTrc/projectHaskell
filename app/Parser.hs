@@ -11,7 +11,7 @@ data SExpr = Atom SAtom | List [SExpr] deriving (Show)
 
 data SAtom = LiteralInt Int | LiteralDouble Double | Symbol String | LiteralString String deriving (Show)
 
--- For testing:
+-- For testing purposes:
 
 -- main :: IO ()
 -- main = do
@@ -24,14 +24,13 @@ data SAtom = LiteralInt Int | LiteralDouble Double | Symbol String | LiteralStri
 --       Left err -> putStrLn $ "Error: " ++ err
 --       Right jsonValue -> print (jsonValue)
 
--- Parse l'input représentant une SExpression et le convertit en JSON
--- Parse l'input représentant une SExpression et le convertit en JSON
+-- Parse the input representing an SExpression and return a JSON value
 parseInput :: String -> Either String Value
 parseInput str = case parseSExpressions str of
   Left err -> Left err
   Right (expr, _) -> Right (sExprToJSON expr)
 
--- Parse l'input représentant une SExpression
+-- Parse the input representing an SExpression
 parseSExpressions :: String -> Either String (SExpr, String)
 parseSExpressions input =
   case parseSExpr input of
@@ -40,7 +39,7 @@ parseSExpressions input =
     Right (_, rest) -> Left $ "Unparsed input remaining: " ++ rest
 
 
--- Parse une seule S-expression
+-- Parse a single S-expression
 parseSExpr :: String -> Either String (SExpr, String)
 parseSExpr [] = Left "Empty input"
 parseSExpr (' ':xs) = parseSExpr xs
@@ -50,7 +49,7 @@ parseSExpr ('"':xs) = parseString xs
 parseSExpr xs = parseAtom xs
 
 
--- Parse une liste de SExpr. Le premier argument est l'expression à parser, le deuxième contient les éléments de la liste déjà parsé
+-- Parse a list of SExpr. The first argument is the expression to parse, the second contains the elements of the list already parsed
 parseList :: String -> [SExpr] -> Either String (SExpr, String)
 parseList [] _ = Left "Unfinished list "
 parseList (')':xs) exps = Right (List exps, (dropWhile isSpace xs))
@@ -59,7 +58,7 @@ parseList xs exps =
     Left err -> Left err
     Right (exp, rest) -> parseList rest (exps ++ [exp])
 
--- Parse un atome
+-- Parse an atom
 parseAtom :: String -> Either String (SExpr, String)
 parseAtom str = case parseAtomHelper "" str of
   ([], rest) -> Left ("Invalid atom, couldn't parse from : " ++ rest)
@@ -69,16 +68,17 @@ parseAtom str = case parseAtomHelper "" str of
   (atom, rest) | validSymbol atom -> Right (Atom $ Symbol atom, rest)
   (atom, _) -> Left ("Invalid atom, couldn't parse from : " ++ atom)
 
+-- Indicate if a string is a valid double (only one dot and only digits)
 isValidDouble :: String -> Bool
 isValidDouble str = length (filter (== '.') str) <= 1 && all (\c -> isDigit c || c == '.') str
 
-
+-- Indicate if a string is a valid symbol (no parenthesis, no quotes, no backslashes)
 validSymbol :: String -> Bool
 validSymbol (x:_) | x == '(' || x == ')' || x == '"' || x == '\\' = False
 validSymbol [] = True
 validSymbol (_:xs) = validSymbol xs
 
--- Le but ici est 
+-- The goal is to split the string into two parts: the atom and the rest of the string
 parseAtomHelper :: String -> String -> (String, String)
 parseAtomHelper acc (')':rest) = ( acc, ')':rest)
 parseAtomHelper acc ('\\':'\\':rest) = (acc, '\\':'\\':rest)
@@ -94,8 +94,8 @@ parseString content = case parseStringHelper content "" of
   Right (str, rest) -> Right (Atom $ LiteralString str, (dropWhile isSpace rest))
 
 
--- Parse une chaîne de caractère. La fonction va ajouter chaque caractère dans un accumulateur.
--- Une fois la chaîne de caractère terminé, on renvoie l'accumulateur et les caractères non analysés
+-- Parse a string of characters. The function will add each character to an accumulator.
+-- Once the string is finished, we return the accumulator and the unanalyzed characters
 parseStringHelper :: String -> String -> Either String (String, String)
 parseStringHelper [] acc = Left ("The string is not terminated: " ++ acc)
 parseStringHelper ('\\':'"':xs) acc = parseStringHelper xs (acc ++ "\"")
