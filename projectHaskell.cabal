@@ -39,6 +39,7 @@ common common-all
                      , text
                      , vector
                      , http-types
+                     , network-uri
      ghc-options:      -Wall
                        -Wunticked-promoted-constructors
                        -Wno-name-shadowing

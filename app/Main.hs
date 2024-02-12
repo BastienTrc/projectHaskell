@@ -1,6 +1,11 @@
 module Main where
+
+import Parser
  
-import Data.Aeson (eitherDecode, FromJSON)
+import Data.Aeson (eitherDecode, FromJSON, Value, encode)
+import Network.URI (unEscapeString)
+import Data.List (stripPrefix)
+
 import Web.Scotty
 import GHC.Base (build)
 import Network.HTTP.Req
@@ -10,7 +15,6 @@ import Control.Monad.IO.Class (liftIO)
 import System.Environment
 import Data.Maybe (fromMaybe)
 import System.Exit
-import qualified Data.Text as Text
 import GHC.Generics
 import qualified Data.Text.Lazy.IO as TIO
 import qualified Data.Text.Lazy as T
@@ -29,6 +33,13 @@ instance FromJSON Config
 
 readConfig :: FilePath -> IO (Either String Config)
 readConfig filePath = eitherDecode <$> ByteString.readFile filePath
+
+decodeUrlEncodedString :: String -> String
+decodeUrlEncodedString = map replacePlus . unEscapeString
+  where
+    replacePlus '+' = ' '
+    replacePlus c = c
+
 main :: IO ()
 main = do
     configResult <- readConfig "config.json"
@@ -42,18 +53,22 @@ main = do
               
               post "/convert" $ do
                 inputStr <- body
-                let input = decodeUtf8 inputStr
-                if "hello" `T.isInfixOf` input -- remplacer par la conversion en JSON, et vérifier si la conversion s'est bien passée
-                then do
-                    status status200
-                    let content = "<p style='text-align:center; color:green;'>Succes : 'hello' trouvé<p>" -- remplacer par le contenu JSON
-                    let toReplace = "<p id='succes'></p>"
-                    replaceHtml "./app/templates/index.html" toReplace content
-                else do
-                    status status400
-                    let errorMsg = "<p style='text-align:center; color:red;'>Erreur : 'hello' non trouvé<p>" -- remplacer par le message d'erreur
-                    let toReplace = "<p id='error'></p>"
-                    replaceHtml "./app/templates/index.html" toReplace errorMsg
+                let input = fromMaybe input (stripPrefix "s-expression=" ((decodeUrlEncodedString . T.unpack . decodeUtf8 ) inputStr))
+                let parsedExprs = parseInput input
+                case parsedExprs of
+                    Right json -> do
+                        status status200
+                        let content = "<p style='text-align:center; color:green;'>Succes :\n" ++ ((unEscapeString . T.unpack . decodeUtf8 . encode) json) ++ "<p>" -- remplacer par le contenu JSON
+                        let toReplace = "<p id='succes'></p>"
+                        replaceHtml "./app/templates/index.html" toReplace content
+                        
+                    Left err -> do
+                        status status400
+                        let errorMsg = "<p style='text-align:center; color:red;'>Erreur :"++ err ++"<p>" -- remplacer par le message d'erreur
+                        let toReplace = "<p id='error'></p>"
+                        replaceHtml "./app/templates/index.html" toReplace errorMsg
+                        
+                   
         
 -- Fonction pour remplacer le contenu HTML dans un fichier donné par un nouveau contenu 
 replaceHtml :: FilePath -> String -> String -> ActionM ()
