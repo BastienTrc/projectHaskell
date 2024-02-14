@@ -43,11 +43,10 @@ parseSExpressions input =
 parseSExpr :: String -> Either String (SExpr, String)
 parseSExpr [] = Left "Empty input"
 parseSExpr (' ':xs) = parseSExpr xs
-parseSExpr ('(':xs) = parseList xs []
+parseSExpr ('(':xs) = parseList (dropWhile isSpace xs) []
 parseSExpr (')':_) = Left "Unexpected ')'"
 parseSExpr ('"':xs) = parseString xs
 parseSExpr xs = parseAtom xs
-
 
 -- Parse a list of SExpr. The first argument is the expression to parse, the second contains the elements of the list already parsed
 parseList :: String -> [SExpr] -> Either String (SExpr, String)
@@ -56,21 +55,21 @@ parseList (')':xs) exps = Right (List exps, (dropWhile isSpace xs))
 parseList xs exps =
   case parseSExpr xs of
     Left err -> Left err
-    Right (exp, rest) -> parseList rest (exps ++ [exp])
+    Right (exp, rest) -> parseList (dropWhile isSpace rest) (exps ++ [exp])
 
 -- Parse an atom
 parseAtom :: String -> Either String (SExpr, String)
 parseAtom str = case parseAtomHelper "" str of
   ([], rest) -> Left ("Invalid atom, couldn't parse from : " ++ rest)
   (atom, rest) | all isDigit atom -> Right (Atom $ LiteralInt (read atom), rest)
-  (atom, rest) | length (filter (== '.') atom) == 1 && all (\c -> isDigit c || c == '.') atom -> Right (Atom $ LiteralDouble (read atom), rest)
-  (atom, _) | length (filter (== '.') atom) > 1 && all (\c -> isDigit c || c == '.') atom -> Left ("Invalid double, couldn't parse from: " ++ atom)
+  (atom, rest) | isValidDouble atom -> Right (Atom $ LiteralDouble (read atom), rest)
+  -- (atom, _) | (last atom /= '.') || (head atom /= '.') || length (filter (== '.') atom) > 1 && all (\c -> isDigit c || c == '.') atom -> Left ("Invalid double, couldn't parse from: " ++ atom)
   (atom, rest) | validSymbol atom -> Right (Atom $ Symbol atom, rest)
   (atom, _) -> Left ("Invalid atom, couldn't parse from : " ++ atom)
 
 -- Indicate if a string is a valid double (only one dot and only digits)
 isValidDouble :: String -> Bool
-isValidDouble str = length (filter (== '.') str) <= 1 && all (\c -> isDigit c || c == '.') str
+isValidDouble atom = (last atom /= '.') && (head atom /= '.') && length (filter (== '.') atom) == 1 && all (\c -> isDigit c || c == '.') atom
 
 -- Indicate if a string is a valid symbol (no parenthesis, no quotes, no backslashes)
 validSymbol :: String -> Bool

@@ -3,8 +3,6 @@ module Main where
 import Parser
  
 import Data.Aeson (eitherDecode, FromJSON, Value, encode)
-import Network.URI (unEscapeString)
-import Data.List (stripPrefix)
 
 import Web.Scotty
 import GHC.Base (build)
@@ -34,11 +32,6 @@ instance FromJSON Config
 readConfig :: FilePath -> IO (Either String Config)
 readConfig filePath = eitherDecode <$> ByteString.readFile filePath
 
-decodeUrlEncodedString :: String -> String
-decodeUrlEncodedString = map replacePlus . unEscapeString
-  where
-    replacePlus '+' = ' '
-    replacePlus c = c
 
 main :: IO ()
 main = do
@@ -52,13 +45,13 @@ main = do
                 file "./app/templates/index.html"
               
               post "/convert" $ do
-                inputStr <- body
-                let input = fromMaybe input (stripPrefix "s-expression=" ((decodeUrlEncodedString . T.unpack . decodeUtf8 ) inputStr))
+                inputStr <- formParam "s-expression"
+                let input = inputStr
                 let parsedExprs = parseInput input
                 case parsedExprs of
                     Right json -> do
                         status status200
-                        let content = "<p style='text-align:center; color:green;'>Succès :\n" ++ ((unEscapeString . T.unpack . decodeUtf8 . encode) json) ++ "<p>" -- remplacer par le contenu JSON
+                        let content = "<p style='text-align:center; color:green;'>Succès :\n" ++ (( T.unpack . decodeUtf8 . encode) json) ++ "<p>" -- remplacer par le contenu JSON
                         let toReplace = "<p id='succes'></p>"
                         replaceHtml "./app/templates/index.html" toReplace content
                         
