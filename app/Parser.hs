@@ -111,9 +111,9 @@ sExprToJSON (List exprs) = Array $ V.fromList $ fmap sExprToJSON exprs
 
 
 atomToJSON :: SAtom -> Value
-atomToJSON (LiteralInt i) = Number $ fromIntegral i
-atomToJSON (LiteralDouble d) = Number $ realToFrac d
-atomToJSON (LiteralString s) = String $ T.pack s
+atomToJSON (LiteralInt int) = toJSON int
+atomToJSON (LiteralDouble double) = toJSON double
+atomToJSON (LiteralString str) = toJSON str
 atomToJSON (Symbol "true") = Bool True
 atomToJSON (Symbol "false") = Bool False
 atomToJSON (Symbol "null") = Null

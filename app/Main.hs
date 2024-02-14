@@ -58,7 +58,7 @@ main = do
                 case parsedExprs of
                     Right json -> do
                         status status200
-                        let content = "<p style='text-align:center; color:green;'>Succes :\n" ++ ((unEscapeString . T.unpack . decodeUtf8 . encode) json) ++ "<p>" -- remplacer par le contenu JSON
+                        let content = "<p style='text-align:center; color:green;'>Succès :\n" ++ ((unEscapeString . T.unpack . decodeUtf8 . encode) json) ++ "<p>" -- remplacer par le contenu JSON
                         let toReplace = "<p id='succes'></p>"
                         replaceHtml "./app/templates/index.html" toReplace content
                         
