@@ -42,7 +42,7 @@ main = do
           let port = portNumber config
           scotty port $ do
               get "/ui" $ do
-                file "./app/templates/index.html"
+                file "./src/templates/index.html"
               
               post "/convert" $ do
                 inputStr <- formParam "s-expression"
@@ -53,13 +53,13 @@ main = do
                         status status200
                         let content = "<p style='text-align:center; color:green;'>Succès :\n" ++ (( T.unpack . decodeUtf8 . encode) json) ++ "<p>" -- remplacer par le contenu JSON
                         let toReplace = "<p id='succes'></p>"
-                        replaceHtml "./app/templates/index.html" toReplace content
+                        replaceHtml "./src/templates/index.html" toReplace content
                         
                     Left err -> do
                         status status400
                         let errorMsg = "<p style='text-align:center; color:red;'>Erreur :"++ err ++"<p>" -- remplacer par le message d'erreur
                         let toReplace = "<p id='error'></p>"
-                        replaceHtml "./app/templates/index.html" toReplace errorMsg
+                        replaceHtml "./src/templates/index.html" toReplace errorMsg
                         
                    
         
